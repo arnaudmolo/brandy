@@ -34,12 +34,16 @@ const Hand: React.SFC<{
   }, []);
 
   const onAcceptGift = useCallback(() => {
-    Players.accept();
-  }, []);
+    if (teamate?.gift && player.gift || !hasToGift) {
+      console.log('et ui');
+      Players.accept();
+    }
+  }, [teamate?.gift, player.gift, hasToGift]);
 
   if (!player) {
     return <div>Pas de player</div>
   }
+  console.log(teamate, hasToGift)
   return (
     <div className="hand-container">
       {player.hand.map(card => (
@@ -50,13 +54,17 @@ const Hand: React.SFC<{
           {selectedCard && (card.id === selectedCard.id) && player.color && (
             <ClickAwayListener onClickAway={ () => setSelectedCcard(null)}>
               <div className="hand-container__choice-container">
-                {hasToGift ? (
+                {!(teamate?.gift) ? hasToGift ? (
                   <div onClick={onGiftClick} className="choice-container__button__give choice-container__button">
                     <p>Give</p>
                   </div>
                 ) : (
                   <div onClick={() => onDrawCard && onDrawCard(selectedCard)} className="choice-container__button__play choice-container__button">
                     <p>Play</p>
+                  </div>
+                ) : (
+                  <div className="choice-container__button__give choice-container__button">
+                    <p>Waiting on your teamate</p>
                   </div>
                 )}
               </div>
@@ -67,15 +75,7 @@ const Hand: React.SFC<{
       ))}
       {player.gift && (
         <div className="hand-container__card-container hand-container__card-container__gift">
-          <div className="hand-container__choice-container">
-            <div onClick={onAcceptGift} className="choice-container__button__play choice-container__button">
-              <p>Accept</p>
-            </div>
-            <div onClick={onDiscardGift} className="choice-container__button__give choice-container__button">
-              <p>Discard Gift</p>
-            </div>
-          </div>
-          <Card card={ player.gift.card } />
+          <Card onClick={onAcceptGift} hidden card={ player.gift.card } />
         </div>
       )}
     </div>

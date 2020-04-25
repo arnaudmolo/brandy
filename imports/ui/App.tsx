@@ -12,6 +12,7 @@ import Map from './components/Map';
 import CreateRoom from './components/CreateRoom';
 import Room from './components/Room';
 import AuthProvider from './AuthProvider';
+import 'css-reset-and-normalize';
 
 const Home = memo(() => {
   const [roomId, setRoomId] = React.useState('');

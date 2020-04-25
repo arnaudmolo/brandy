@@ -53,10 +53,10 @@ const TEAMS = [['black', 'white'], ['blue', 'yellow'], ['red', 'green']];
 
 const findTeamateByColor = (players: Player[], player: Player) => {
   if (!player.color) {
-    throw new Error('Player has no color set');
+    return null;
   }
   const nbTeam = TEAMS.findIndex(team => team.includes(player.color));
-  return players.find(p => TEAMS.findIndex(t => t.includes(p.color)) === nbTeam);
+  return players.find(p => p._id !== player._id && TEAMS.findIndex(t => t.includes(p.color)) === nbTeam);
 }
 
 const Room: React.SFC<{}> = () => {
@@ -109,6 +109,7 @@ const Room: React.SFC<{}> = () => {
 
   const onPlayCard = useCallback((card: CardType) => {
     console.log('onPlayCard', card);
+    Players.play(card);
     // axios.put(`/rooms/${room.id}`, {
     //   cards: {
     //     deck: room.cards.deck,

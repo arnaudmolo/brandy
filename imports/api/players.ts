@@ -34,6 +34,9 @@ class PlayersCollection extends Mongo.Collection {
   accept () {
     Meteor.call('players.accept', Session.get('player'));
   }
+  play (card: Card) {
+    Meteor.call('players.play', Session.get('player'), card);
+  }
 }
 
 const Players = new PlayersCollection('players');
@@ -41,6 +44,14 @@ const Players = new PlayersCollection('players');
 export default Players;
 
 Meteor.methods({
+  'players.play'(playerId: string, card) {
+    Players.update({_id: playerId}, {
+      $pull: {
+        hand: card
+      },
+    });
+    Rooms.update({players: playerId}, {$addToSet: {cemetery: card}});
+  },
   'players.gift'(playerId: string, teamateId: string, card: Card) {
     Players.update({_id: teamateId}, {
       $set: {
@@ -55,6 +66,7 @@ Meteor.methods({
         hand: card
       }
     });
+    Rooms.update({players: playerId}, {$pull: {gifts: playerId}});
   },
   'players.accept'(playerId) {
     const player = Players.findOne(playerId);
@@ -66,7 +78,6 @@ Meteor.methods({
         hand: player.gift.card
       }
     });
-    Rooms.update({players: player.gift.from}, {$pull: {gifts: player._id}});
   },
   'players.discard'(playerId) {
     const player = Players.findOne(playerId);

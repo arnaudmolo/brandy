@@ -14,6 +14,7 @@
     "@types/ramda": "^0.27.3",
     "@types/react-router-dom": "^5.1.4",
     "axios": "^0.19.2",
+    "css-reset-and-normalize": "^2.1.0",
     "meteor-node-stubs": "^1.0.0",
     "ramda": "^0.27.0",
     "react": "^16.13.0",
