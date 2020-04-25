@@ -4,7 +4,7 @@ import flatten from 'ramda/es/flatten';
 import 'meteor/meteor';
 import { Meteor } from 'meteor/meteor';
 import Players from './players';
-import { splitAt } from 'ramda';
+import { splitAt, omit } from 'ramda';
 
 function generateUID () {
   // I generate the UID from two parts here
@@ -51,7 +51,7 @@ class RoomsCollection extends Mongo.Collection {
     });
   }
   join (roomId: string, playerId: string) {
-    console.log({roomId, playerId});
+    console.log('ask to join', roomId, playerId);
     return Meteor.call('rooms.join', roomId, playerId);
   }
   movePawn (roomId: string, from: number, to: number) {
@@ -64,7 +64,20 @@ class RoomsCollection extends Mongo.Collection {
 
 Meteor.methods({
   'rooms.join'(roomId, playerId) {
-    console.log('join', roomId, playerId);
+    const rooms = Rooms.find({players: playerId});
+    rooms.map((room) => {
+      if (room._id !== roomId) {
+        Rooms.update(
+          {_id: room._id},
+          {
+            $pull: {
+              players: playerId
+            }
+          }
+        );
+      }
+    });
+    Players.update({_id: playerId}, {$set: {hand: [], color: null, gift: null}});
     Rooms.update({_id: roomId}, {$addToSet: {players: playerId}});
   },
   'rooms.pawns'(roomId, from, to) {
@@ -78,10 +91,9 @@ Meteor.methods({
     const room = Rooms.findOne(roomId);
     let deck = room.deck;
     let cemetery = room.cemetery;
-    console.log(room, nb);
     room.players.map((playerId: string) => {
-      if (deck.length < nb) {
-        deck = shuffleArray([...deck, ...cemetery]);
+      if (deck.length < +nb) {
+        deck = shuffleArray([...deck, ...cemetery.map(omit(['by']))]);
         cemetery = [];
       }
       const [hand, end] = splitAt(nb, deck);

@@ -35,7 +35,6 @@ const Hand: React.SFC<{
 
   const onAcceptGift = useCallback(() => {
     if (teamate?.gift && player.gift || !hasToGift) {
-      console.log('et ui');
       Players.accept();
     }
   }, [teamate?.gift, player.gift, hasToGift]);
@@ -43,7 +42,6 @@ const Hand: React.SFC<{
   if (!player) {
     return <div>Pas de player</div>
   }
-  console.log(teamate, hasToGift)
   return (
     <div className="hand-container">
       {player.hand.map(card => (

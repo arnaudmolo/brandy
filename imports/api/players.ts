@@ -50,7 +50,7 @@ Meteor.methods({
         hand: card
       },
     });
-    Rooms.update({players: playerId}, {$addToSet: {cemetery: card}});
+    Rooms.update({players: playerId}, {$addToSet: {cemetery: {...card, by: playerId}}});
   },
   'players.gift'(playerId: string, teamateId: string, card: Card) {
     Players.update({_id: teamateId}, {
@@ -81,14 +81,12 @@ Meteor.methods({
   },
   'players.discard'(playerId) {
     const player = Players.findOne(playerId);
-    console.log(player.gift);
     const teamate = Players.findOne({_id: player.gift.from});
-    const quoi = Players.update(teamate, {
+    Players.update(teamate, {
       $push: {
         hand: player.gift.card,
       }
     });
-    console.log({ quoi, teamate });
     Players.update(player, {
       $unset: {
         gift: null,

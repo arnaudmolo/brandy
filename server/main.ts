@@ -7,5 +7,4 @@ Meteor.startup(() => {
   Rooms;
   Players;
   // If the Links collection is empty, add some data.
-  // console.log(Rooms, Players);
 });

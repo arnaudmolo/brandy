@@ -45,7 +45,7 @@ type RoomType = {
   readonly pawns: {
     readonly position: number;
     readonly color: string;
-  }[]
+  }[];
 }
 
 
@@ -53,7 +53,7 @@ const TEAMS = [['black', 'white'], ['blue', 'yellow'], ['red', 'green']];
 
 const findTeamateByColor = (players: Player[], player: Player) => {
   if (!player.color) {
-    return null;
+    return undefined;
   }
   const nbTeam = TEAMS.findIndex(team => team.includes(player.color));
   return players.find(p => p._id !== player._id && TEAMS.findIndex(t => t.includes(p.color)) === nbTeam);
@@ -66,7 +66,6 @@ const Room: React.SFC<{}> = () => {
 
   const room: RoomType = useTracker(() => {
     const room = Rooms.findOne({identifiant: params.id});
-    console.log(room);
     return room;
   }, [params.id])
 
@@ -82,13 +81,11 @@ const Room: React.SFC<{}> = () => {
     return [];
   }, [room && room.players]);
 
-  console.log({player});
-
   useEffect(() => {
     if (room && player && !room.players.includes(player._id)) {
-      Rooms.join(room._id, playerId);
+      Rooms.join(room._id, player._id);
     }
-  }, [room, player]);
+  }, [room?._id, player?._id]);
 
   const updatePawns = useCallback((from: number, to: number) => {
     Rooms.movePawn(room._id, from, to);
@@ -108,21 +105,8 @@ const Room: React.SFC<{}> = () => {
   , [room]);
 
   const onPlayCard = useCallback((card: CardType) => {
-    console.log('onPlayCard', card);
     Players.play(card);
-    // axios.put(`/rooms/${room.id}`, {
-    //   cards: {
-    //     deck: room.cards.deck,
-    //     cemetery: [...room.cards.cemetery, card]
-    //   }
-    // });
-    // axios.put(`/players/${player._id}`, {
-    //   cards: {
-    //     ...player.cards,
-    //     hand: player.cards.hand.filter(c => c.id !== card.id),
-    //   }
-    // });
-  }, [room, player]);
+  }, []);
 
   const onColorClick = useCallback((color) =>
     Players.update(playerId, {$set: {color}})
