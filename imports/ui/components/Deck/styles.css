@@ -1,0 +1,35 @@
+.deck--deck__container {
+  max-height: 100px;
+  position: relative;
+}
+
+.deck--card__container {
+  position: absolute;
+  top: 0;
+  transition: transform 1s ease;
+}
+
+.deck--card__container:nth-child(1) {
+  transform: translate(0, 0) rotate(0deg);
+  z-index: 6;
+}
+
+.deck--card__container:nth-child(2) {
+  transform: translate(-3px, -3px) rotate(-3deg);
+  z-index: 5;
+}
+
+.deck--card__container:nth-child(3) {
+  transform: translate(0, 0) rotate(1deg);
+  z-index: 4;
+}
+
+.deck--card__container:nth-child(4) {
+  transform: translate(3px, 1px) rotate(3deg);
+  z-index: 3;
+}
+
+.deck--card__container:nth-child(5) {
+  transform: translate(10px, 10px) rotate(10deg);
+  z-index: 2;
+}

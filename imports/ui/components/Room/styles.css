@@ -1,0 +1,92 @@
+.room__container {
+  display: flex;  
+  flex-flow: row wrap;
+  font-weight: bold;
+  text-align: center;
+  max-height: 100vh;
+  width: 100vw;
+}
+
+.room__container > * {
+  flex: 1 100%;
+}
+
+.room__main {
+  text-align: left;
+  display: flex;
+  box-shadow: 10px -10px 30px inset rgba(0, 0, 0, 0.3);
+  background-color: var(--color2);
+  border-radius: 0 0 0 10px;
+}
+
+.room__aside, .room__footer {
+  background-color: var(--color1);
+}
+
+.room__aside { flex: 1 0 0; }
+
+.room__main { flex: 3 0px; }
+.room__aside { order: 1; } 
+.room__main { order: 2; }
+.room__footer { order: 4; }
+
+.color-picker__color {
+  width: 33px;
+  height: 33px;
+  border-radius: 2px;
+  border: lightblue 1px solid;
+}
+
+.color-picker__color__disable {
+  opacity: 0.3;
+}
+
+.color-picker__color__black {
+  background-color: var(--black);
+}
+.color-picker__color__blue {
+  background-color: var(--blue);
+}
+.color-picker__color__green {
+  background-color: var(--green);
+}
+.color-picker__color__white {
+  background-color: var(--white);
+}
+.color-picker__color__yellow {
+  background-color: var(--yellow);
+}
+.color-picker__color__red {
+  background-color: var(--red);
+}
+
+.player-list__player__black {
+  background-color: var(--black);
+}
+.player-list__player__blue {
+  background-color: var(--blue);
+}
+.player-list__player__green {
+  background-color: var(--green);
+}
+.player-list__player__white {
+  background-color: var(--white);
+}
+.player-list__player__yellow {
+  background-color: var(--yellow);
+}
+.player-list__player__red {
+  background-color: var(--red);
+}
+
+.color-picker {
+  display: flex;
+}
+
+
+
+@media only screen and (max-width: 800px) {
+  .room__footer {
+    order: 0;
+  }
+}

@@ -1,0 +1,85 @@
+
+.slot, .point {
+  transition: stroke-width 0.2s ease;
+  stroke-width: 0;
+}
+
+.slot {
+  fill: url(#creux);
+  stroke: rgba(0, 0, 0, 0.4);
+  stroke-width: 1;
+}
+
+.slot__ {
+  stroke-width: 0;
+}
+
+.slot__black {
+  stroke: var(--black);
+}
+.slot__blue {
+  stroke: var(--blue);
+}
+.slot__green {
+  stroke: var(--green);
+}
+.slot__white {
+  stroke: var(--white);
+}
+.slot__yellow {
+  stroke: var(--yellow);
+}
+.slot__red {
+  stroke: var(--red);
+}
+
+.slot-hover {
+  fill: transparent;
+  stroke: transparent;
+}
+
+.point__container:hover .point {
+  stroke-width: 3;
+}
+
+.polygon-container:hover circle.slot {
+  stroke-width: 15;
+}
+
+.point__container-invisible {
+  pointer-events: none;
+}
+
+.point__black {
+  fill: var(--black);
+  stroke: var(--black);
+}
+.point__blue {
+  fill: var(--blue);
+  stroke: var(--blue);
+}
+.point__green {
+  fill: var(--green);
+  stroke: var(--green);
+}
+.point__white {
+  fill: var(--white);
+  stroke: var(--white);
+}
+.point__yellow {
+  fill: var(--yellow);
+  stroke: var(--yellow);
+}
+.point__red {
+  fill: var(--red);
+  stroke: var(--red);
+}
+.point__shape {
+  fill: url(#boule);
+  stroke: url(#boule);
+}
+
+.board--scene {
+  max-height: calc(100vh - 200px);
+  margin: auto;
+}

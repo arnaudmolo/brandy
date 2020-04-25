@@ -1,0 +1,39 @@
+
+// const _points = [
+//   [
+//     {cx: 793.3, cy: 186.59, color: 'blue'},
+//     {cx: 752.57, cy: 186.59, color: 'blue'},
+//     {cx: 710.52, cy: 186.59, color: 'blue'},
+//     {cx: 669.13, cy: 186.59, color: 'blue'},
+//   ],
+//   [
+//     {cx: 983.78, cy: 622.43, color: 'green'},
+//     {cx: 983.78, cy: 581.7, color: 'green'},
+//     {cx: 983.78, cy: 539.66, color: 'green'},
+//     {cx: 983.78, cy: 498.27, color: 'green'},
+//   ],
+//   [
+//     {cx: 440.5, cy:913.89, color: 'white'},
+//     {cx: 481.23, cy:913.89, color: 'white'},
+//     {cx: 523.28, cy:913.89, color: 'white'},
+//     {cx: 564.67, cy:913.89, color: 'white'},
+//   ],
+//   [
+//     {cx: 213.54, cy: 812.33, color: 'yellow'},
+//     {cx: 254.27, cy: 812.33, color: 'yellow'},
+//     {cx: 296.32, cy: 812.33, color: 'yellow'},
+//     {cx: 337.71, cy: 812.33, color: 'yellow'},
+//   ],
+//   [
+//     {cx: 18.13, cy: 377.24, color: 'red'},
+//     {cx: 18.13, cy: 417.97, color: 'red'},
+//     {cx: 18.13, cy: 460.02, color: 'red'},
+//     {cx: 18.13, cy: 501.41, color: 'red'},
+//   ],
+//   [
+//     {cx: 565.6, cy: 86.11, color: 'black'},
+//     {cx: 524.87, cy: 86.11, color: 'black'},
+//     {cx: 482.82, cy: 86.11, color: 'black'},
+//     {cx: 441.43, cy: 86.11, color: 'black'},
+//   ]
+// ]

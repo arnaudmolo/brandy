@@ -1,0 +1,42 @@
+{
+  "name": "brandy",
+  "private": true,
+  "scripts": {
+    "start": "meteor run",
+    "test": "meteor test --once --driver-package meteortesting:mocha",
+    "test-app": "TEST_WATCH=1 meteor test --full-app --driver-package meteortesting:mocha",
+    "visualize": "meteor --production --extra-packages bundle-visualizer"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.8.4",
+    "@material-ui/core": "^4.9.11",
+    "@material-ui/icons": "^4.9.1",
+    "@types/ramda": "^0.27.3",
+    "@types/react-router-dom": "^5.1.4",
+    "axios": "^0.19.2",
+    "meteor-node-stubs": "^1.0.0",
+    "ramda": "^0.27.0",
+    "react": "^16.13.0",
+    "react-dnd": "^10.0.2",
+    "react-dnd-mouse-backend": "^1.0.0-rc.2",
+    "react-dom": "^16.13.0",
+    "react-resize-detector": "^4.2.3",
+    "react-router-dom": "^5.1.2",
+    "reactjs-popup": "^1.5.0",
+    "socket.io-client": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/meteor": "^1.4.40",
+    "@types/mocha": "^5.2.7",
+    "@types/react": "^16.9.23",
+    "@types/react-dom": "^16.9.5",
+    "typescript": "^3.8.2"
+  },
+  "meteor": {
+    "mainModule": {
+      "client": "client/main.tsx",
+      "server": "server/main.ts"
+    },
+    "testModule": "tests/main.ts"
+  }
+}

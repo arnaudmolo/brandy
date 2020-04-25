@@ -1,0 +1,23 @@
+.card {
+  height: 220px;
+  width: 158px;
+  border-radius: 10px;
+}
+
+.card__Pikes, .card__Clovers {
+  color: black;
+}
+
+.card__Hearts, .card__Tiles {
+  color: red;
+}
+
+.hidden-card__img {
+  max-height: 300px;
+}
+
+.visible-card {
+  text-align: center;
+  background-color: white;
+  background-image: url('./preview.png');
+}
