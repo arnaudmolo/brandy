@@ -1,8 +1,9 @@
 import React, { useMemo, useCallback } from 'react';
 import MouseBackEnd from 'react-dnd-mouse-backend';
 import { useDrag, DndProvider, useDrop } from 'react-dnd';
-import { update, findIndex } from 'ramda';
+import { findIndex } from 'ramda';
 import { withResizeDetector } from 'react-resize-detector';
+import { useSpring, animated } from 'react-spring';
 
 import Player from '../../models/Player';
 import data from './points';
@@ -34,10 +35,13 @@ const Point: React.SFC<{
   });
   const x = collectedProps ? (collectedProps.x + props.cx) : props.cx;
   const y = collectedProps ? (collectedProps.y + props.cy) : props.cy;
+  const animate = useSpring({
+    xy: [x, y]
+  });
   return (
-    <g
+    <animated.g
       className={`point__container point__container__${props.position.color}  ${collectedProps ? 'point__container-invisible' : ''}`}
-      transform={`translate(${x}, ${y}) ${collectedProps ? 'scale(1.5)' : ''}`}
+      transform={animate.xy.interpolate((x, y) => `translate(${x}, ${y}) ${collectedProps ? 'scale(1.5)' : ''}`)}
       ref={drag}
     >
       <circle
@@ -52,7 +56,7 @@ const Point: React.SFC<{
         cx={0}
         cy={0}
       />
-    </g>
+    </animated.g>
   );
 });
 
@@ -111,7 +115,7 @@ type Props = {
 const XVB = 980;
 const YVB = 980;
 
-const Board: React.SFC<Props> = React.memo(withResizeDetector((props: Props) => {
+const Board: React.SFC<Props> = React.memo(withResizeDetector<Props>((props) => {
   const { pawns, setPawns } = props;
   let { width, height } = props;
   width = width || 100;
@@ -127,7 +131,7 @@ const Board: React.SFC<Props> = React.memo(withResizeDetector((props: Props) => 
 
   const onDrop = useCallback((pointDescription, newPosition) => {
     setPawns(
-      findIndex((p: Pawn) => pointDescription.payload.position === p.position, pawns),
+      findIndex((p: Pawn) => pointDescription.payload.position === p.position && pointDescription.payload.color === p.color, pawns),
       newPosition,
     );
   }, [pawns, setPawns]);
@@ -192,11 +196,9 @@ const Board: React.SFC<Props> = React.memo(withResizeDetector((props: Props) => 
           {useMemo(() =>
             pawns.map((pawn, i) => {
               const position = data[pawn.position];
-              const key = `${pawn.color}-${i}`;
               return (
                 <Point
-                  key={key}
-                  id={key}
+                  key={`${pawn.color}-${i}`}
                   cx={position.cx}
                   cy={position.cy}
                   position={pawn}
