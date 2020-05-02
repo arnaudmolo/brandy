@@ -46,7 +46,7 @@ class RoomsCollection extends Mongo.Collection {
       identifiant: generateUID(),
       deck: shuffleArray([...generateDeck(), ...generateDeck()]),
       cemetery: [],
-      pawns: flatten(COLORS.map((color, i) => range(i * 4, (i * 4) + 4).map(index => ({position: 96 + index, color: color, moved: false})))),
+      pawns: flatten(COLORS.map((color, i) => start[color].map(slot => ({position: slot.position, color: color, moved: false})))),
       players: [],
       gifts: [],
     });
