@@ -1,7 +1,28 @@
-import flatten from "ramda/src/flatten";
+import flatten from 'ramda/src/flatten';
+import values from 'ramda/src/values';
+const gardeLindex = () => {
+  let index = -1;
+  return d => {
+    d.position = ++index;
+    return d;
+  };
+};
 
-const positionMatrice = [
-  [
+const mapper = gardeLindex();
+
+type Slot = {
+  cx: number;
+  cy: number;
+  position: number;
+  color?: string;
+}
+
+type PathsCollections = {
+  [color: string]: Slot[]
+}
+
+export const paths: PathsCollections = {
+  black: [
     {cx: 417.61, cy: 125.89, color: 'black'},
     {cx: 417.61, cy: 165.3},
     {cx: 417.61, cy: 204.72},
@@ -19,7 +40,7 @@ const positionMatrice = [
     {cx: 70.82, cy: 239.9},
     {cx: 43.48, cy: 272.03}
   ],
-  [
+  red: [
     {cx: 15.42, cy: 302.21, color: 'red'},
     {cx: 45.4, cy: 331.69},
     {cx: 73.51, cy: 359.32},
@@ -37,7 +58,7 @@ const positionMatrice = [
     {cx: 69.66, cy: 759.51},
     {cx: 102.03, cy: 786.56}
   ],
-  [
+  yellow: [
     {cx: 137.65, cy: 813.17, color: 'yellow'},
     {cx: 167.38, cy: 783.44},
     {cx: 195.25, cy: 755.56},
@@ -55,7 +76,7 @@ const positionMatrice = [
     {cx: 502.99, cy: 876.38},
     {cx: 544.38, cy: 876.38}
   ],
-  [
+  white: [
     {cx: 585.77, cy: 876.38, color: 'white'},
     {cx: 585.77, cy: 834.34},
     {cx: 585.77, cy: 794.92},
@@ -73,7 +94,7 @@ const positionMatrice = [
     {cx: 932.56, cy: 759.74},
     {cx: 959.89, cy: 727.61}
   ],
-  [
+  green: [
     {cx: 984.58, cy: 695.36, color: 'green'},
     {cx: 954.6, cy: 665.88},
     {cx: 926.49, cy: 638.25},
@@ -91,7 +112,7 @@ const positionMatrice = [
     {cx: 930.34, cy: 238.06},
     {cx: 897.97, cy: 211.01}
   ],
-  [
+  blue: [
     {cx: 865.3, cy: 188.52, color: 'blue'},
     {cx: 835.56, cy: 218.25},
     {cx: 807.69, cy: 246.13},
@@ -109,76 +130,108 @@ const positionMatrice = [
     {cx: 502.59, cy: 125.31},
     {cx: 461.2, cy: 125.31}
   ],
-  [
+};
+
+export const allPath = flatten(values(paths));
+
+export const start = {
+  blue: [
     {cx: 793.3, cy: 186.59},
     {cx: 752.57, cy: 186.59},
     {cx: 710.52, cy: 186.59},
     {cx: 669.13, cy: 186.59},
   ],
-  [
+  green: [
     {cx: 983.78, cy: 622.43},
     {cx: 983.78, cy: 581.7},
     {cx: 983.78, cy: 539.66},
     {cx: 983.78, cy: 498.27},
   ],
-  [
-    {cx: 440.5, cy:913.89},
-    {cx: 481.23, cy:913.89},
-    {cx: 523.28, cy:913.89},
-    {cx: 564.67, cy:913.89},
+  white: [
+    {cx: 440.5, cy: 913.89},
+    {cx: 481.23, cy: 913.89},
+    {cx: 523.28, cy: 913.89},
+    {cx: 564.67, cy: 913.89},
   ],
-  [
+  yellow: [
     {cx: 213.54, cy: 812.33},
     {cx: 254.27, cy: 812.33},
     {cx: 296.32, cy: 812.33},
     {cx: 337.71, cy: 812.33},
   ],
-  [
+  red: [
     {cx: 18.13, cy: 377.24},
     {cx: 18.13, cy: 417.97},
     {cx: 18.13, cy: 460.02},
     {cx: 18.13, cy: 501.41},
   ],
-  [
+  black: [
     {cx: 565.6, cy: 86.11},
     {cx: 524.87, cy: 86.11},
     {cx: 482.82, cy: 86.11},
     {cx: 441.43, cy: 86.11},
   ],
-  [
+}
+
+export const end = {
+  blue: [
     {cx: 818, cy: 348.1, color: 'blue'},
     {cx: 847, cy: 319.3, color: 'blue'},
     {cx: 877, cy: 289.57, color: 'blue'},
     {cx: 876, cy: 249.15, color: 'blue'},
-  ],
-  [
+  ].reverse(),
+  green: [
     {cx: 822.27, cy: 647.86, color: 'green'},
     {cx: 851.07, cy: 676.66, color: 'green'},
     {cx: 880.8, cy: 706.39, color: 'green'},
     {cx: 921.22, cy: 705.92, color: 'green'},
-  ],
-  [
+  ].reverse(),
+  white: [
     {cx: 502.99, cy: 712.17, color: 'white'},
     {cx: 502.99, cy: 752.9, color: 'white'},
     {cx: 502.99, cy: 794.95, color: 'white'},
     {cx: 531.89, cy: 823.2, color: 'white'},
-  ], [
+  ].reverse(),
+  yellow: [
     {cx: 186.86, cy: 652.36, color: 'yellow'},
     {cx: 158.06, cy: 681.16, color: 'yellow'},
     {cx: 128.33, cy: 710.89, color: 'yellow'},
     {cx: 128.79, cy: 751.31, color: 'yellow'},
-  ], [
+  ].reverse(),
+  red: [
     {cx: 179.64, cy: 351.82, color: 'red'},
     {cx: 150.84, cy: 323.02, color: 'red'},
     {cx: 121.11, cy: 293.29, color: 'red'},
     {cx: 80.69, cy: 293.75, color: 'red'},
-  ], [
+  ].reverse(),
+  black: [
     {cx: 503.53, cy: 288.24, color: 'black'},
     {cx: 503.53, cy: 247.51, color: 'black'},
     {cx: 503.53, cy: 205.46, color: 'black'},
     {cx: 474.62, cy: 177.21, color: 'black'},
-  ]
-];
+  ].reverse(),
+}
 
-export default flatten(positionMatrice)
-  .map((d, index) => ({...d, position: index}));
+const positionMatrice = [
+  ...paths.black,
+  ...paths.red,
+  ...paths.yellow,
+  ...paths.white,
+  ...paths.green,
+  ...paths.blue,
+
+  ...start.black,
+  ...end.black,
+  ...start.red,
+  ...end.red,
+  ...start.yellow,
+  ...end.yellow,
+  ...start.white,
+  ...end.white,
+  ...start.green,
+  ...end.green,
+  ...start.blue,
+  ...end.blue,
+].map(mapper);
+
+export default positionMatrice;

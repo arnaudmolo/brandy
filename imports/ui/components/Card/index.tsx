@@ -74,3 +74,7 @@ export default ({onClick, card, hidden}: Props) => {
     );
   }
 };
+
+console.log(back
+  , all
+  );

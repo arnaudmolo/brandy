@@ -23,6 +23,13 @@ import Cemetery from '../Cemetery';
 import { useTracker } from 'meteor/react-meteor-data';
 import { Rooms } from '/imports/api/rooms';
 import Players from '/imports/api/players';
+import { last, slice, head, nth, curry, chain, zipObj, map, take, tail, mathMod, __, range } from 'ramda';
+import { start, paths, allPath, end } from '../Board/points';
+
+const circle = mathMod(__, 96)
+
+const objFromListWith = curry((fn, list) => chain(zipObj, map(fn))(list))
+const objFromPosition = objFromListWith(p => p.position)
 
 const COLORS = [
   'black',
@@ -32,6 +39,8 @@ const COLORS = [
   'yellow',
   'red',
 ];
+const FIRSTS = [0, 16, 32, 48, 64, 80];
+const SIMPLE_CARDS = [2, 3, 5, 6, 8, 9, 10, 12];
 
 type RoomType = {
   readonly _id: number;
@@ -45,6 +54,7 @@ type RoomType = {
   readonly pawns: {
     readonly position: number;
     readonly color: string;
+    readonly moved: true;
   }[];
 }
 
@@ -80,6 +90,8 @@ const Room: React.SFC<{}> = () => {
     }
     return [];
   }, [room && room.players]);
+  
+  const hasToGift = room && room.gifts.includes(player._id);
 
   useEffect(() => {
     if (room && player && !room.players.includes(player._id)) {
@@ -88,6 +100,7 @@ const Room: React.SFC<{}> = () => {
   }, [room?._id, player?._id]);
 
   const updatePawns = useCallback((from: number, to: number) => {
+    console.log(from, to);
     Rooms.movePawn(room._id, from, to);
   }, [room]);
 
@@ -100,9 +113,12 @@ const Room: React.SFC<{}> = () => {
     }
   }, [changeName]);
 
-  const drawCards = useCallback(async (nb) =>
-    Rooms.draw(room._id, nb)
-  , [room]);
+  const drawCards = useCallback(async (nb) => {
+    if (players.some(player => !player.color)) {
+      return console.log('nooooon');
+    }
+    Rooms.draw(room._id, nb);
+  }, [room, players]);
 
   const onPlayCard = useCallback((card: CardType) => {
     Players.play(card);
@@ -118,15 +134,140 @@ const Room: React.SFC<{}> = () => {
     (colors, player) => player.color ? [...colors, player.color] : colors, []
   ) : [];
 
+  const lastCardPlayed = room && last(room.cemetery);
+  const [seven, setSeven] = useState(7);
+  
+  useEffect(() => {
+    console.log('reset a set');
+    setSeven(7);
+  }, [lastCardPlayed?.value]);
+  let playable: any[] = useMemo(() => {
+    let response = [];
+    if (player && player.color && room && room.cemetery && !hasToGift) {
+      if (lastCardPlayed && lastCardPlayed.by === player._id) {
+        const myPawns = room.pawns.filter(pawn => pawn.color === player.color);
+        const myStart = start[player.color];
+        const myPawnsOnBoard = myPawns.filter(pawn => !myStart.map(({position}) => position).includes(pawn.position));
+        const panwsByPosition = objFromPosition(room.pawns);
+        const pawnsOnBoard = room.pawns.filter(pawn => allPath.map(({position}) => position).includes(pawn.position));
+        // const pawnsOnBoardByPosition = objFromPosition(room.pawns)
+        const canaille = (positions: number[]) => {
+          return (pawns, pawn) => {
+            const to = positions.reduce((acc, position) => {
+              const localPath = slice(pawn.position, circle(pawn.position + position), allPath);
+              const rawPath = tail(localPath);
+              const rawPathByLocation = objFromPosition(rawPath);
+              // Bloque si un pion n'est pas bougé
+              if (FIRSTS.some(index => rawPathByLocation[index] && panwsByPosition[index] && panwsByPosition[index] !== pawn && !panwsByPosition[index].moved)) {
+                return acc;
+              }
+              // Rentrer dans la niche
+              if (pawn.moved) {
+                // Tout les points entre le pion et la destination
+                // Si le point de départ est dans le les points que le pion va traverser
+                const startSlot = localPath.find(block => block.position === head(paths[player.color]).position);
+                console.log({startSlot});
+                if (startSlot) {
+                  // Alors bifurque vers la niche
+                  const normalPath = slice(pawn.position + 1, startSlot.position + 1, allPath);
+                  const destination = nth(
+                    position - 1,
+                    [
+                      ...normalPath,
+                      ...take(position - normalPath.length, end[player.color])
+                    ]
+                  );
+                  if (destination) {
+                    acc.push(destination);
+                  }
+                }
+              }
+              // Is in the niche
+              if (end[player.color].find(slot => slot.position === pawn.position)) {
+                return [...acc, end[player.color].find(slot => slot.position === pawn.position + position)]
+              }
+              return [...acc, nth(circle(pawn.position + position), allPath)];
+            }, []);
+            if (to.length >= 1) {
+              pawns.push({from: pawn, to});
+            }
+            return pawns;
+          };
+        }
+        if (lastCardPlayed.value === 1) {
+          // Can I draw a pawn ?
+          if (myPawns.every(pawn => pawn.position !== paths[player.color][0].position)) {
+            response = myPawns.reduce((acc, pawn) => {
+              const isAtStart = myStart.some(slot => slot.position === pawn.position);
+              if (isAtStart) {
+                acc.push({
+                  from: pawn,
+                  to: [head(paths[player.color])]
+                });
+              }
+              return canaille([1])(acc, pawn);
+            }, []);
+          }
+        } else if (SIMPLE_CARDS.includes(lastCardPlayed.value)) {
+          response = myPawnsOnBoard.reduce(canaille([lastCardPlayed.value]), []);
+        } else if (lastCardPlayed.value === 4) {
+          response = myPawnsOnBoard.reduce(canaille([-4, 4]), []);
+        } else if (lastCardPlayed.value === 13) {
+          if (myPawns.every(pawn => pawn.position !== paths[player.color][0].position)) {
+            response = myPawns.reduce((acc, pawn) => {
+              const isAtStart = myStart.some(slot => slot.position === pawn.position);
+              if (isAtStart) {
+                return [
+                  ...acc,
+                  {
+                    from: pawn,
+                    to: [head(paths[player.color])]
+                  }
+                ];
+              }
+              return canaille([13])(acc, pawn);
+            }, []);
+            
+          }
+        } else if (lastCardPlayed.value === 11) {
+          response = myPawnsOnBoard.map(pawn => {
+            return {
+              from: pawn,
+              to: pawnsOnBoard.reduce((acc, pawn) => {
+                if (pawn.moved) {
+                  return [...acc, allPath[pawn.position]]
+                }
+                return acc;
+              }, []),
+            }
+          });
+        } else if (lastCardPlayed.value === 7) {
+          response = myPawnsOnBoard.reduce(
+            canaille(range(1, 7 + 1)),
+            []
+          );
+        }
+      }
+    };
+    return response;
+  }, [lastCardPlayed]);
+
+  console.log({ playable, room });
+
+  const colorsById = players ? players.reduce((acc, player) => {
+    acc[player._id] = player.color;
+    return acc;
+  }, {}) : {};
+
   return (
     <div className="room__container">
       <div className="room__main">
         {room && (
-          <Board pawns={room.pawns} setPawns={updatePawns} />
+          <Board pawns={room.pawns} playable={ playable } setPawns={updatePawns} />
         )}
       </div>
       <aside className="room__aside">
-        {room && <Cemetery cards={room.cemetery} />}
+        {room && <Cemetery colorsById={colorsById} cards={room.cemetery} />}
         {room && <Deck
           cards={ room.deck }
           onDraw={ drawCards }
@@ -187,7 +328,7 @@ const Room: React.SFC<{}> = () => {
           <Hand
             player={ player }
             teamate={ teamate }
-            hasToGift={room.gifts.includes(player._id)}
+            hasToGift={hasToGift}
             players={players.filter(p => p._id !== player._id)}
             onDrawCard={onPlayCard}
           />

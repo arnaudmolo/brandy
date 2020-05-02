@@ -38,8 +38,8 @@
   stroke: transparent;
 }
 
-.point__container:hover .point {
-  stroke-width: 3;
+.polygon-container__enabled circle.slot {
+  stroke-width: 6;
 }
 
 .polygon-container:hover circle.slot {

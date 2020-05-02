@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useMemo } from 'react';
+import React, { useCallback, useState } from 'react';
 import ClickAwayListener from '@material-ui/core/ClickAwayListener';
 
 import CardType from '../../models/Card';
@@ -29,10 +29,6 @@ const Hand: React.SFC<{
     }
   }, [player, players, selectedCard, teamate]);
 
-  const onDiscardGift = useCallback(() => {
-    Players.discard();
-  }, []);
-
   const onAcceptGift = useCallback(() => {
     if (teamate?.gift && player.gift || !hasToGift) {
       Players.accept();
@@ -43,7 +39,7 @@ const Hand: React.SFC<{
     return <div>Pas de player</div>
   }
   return (
-    <div className="hand-container">
+    <div className={`hand-container ${player.color ? `hand-container--${player.color}` : ''}`}>
       {player.hand.map(card => (
         <div
           key={`${card.value}-${card.family}-${card.id}`}

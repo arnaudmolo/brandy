@@ -1,7 +1,7 @@
 import Card from './Card';
 
 interface Player {
-  readonly _id: number;
+  readonly _id: string;
   readonly name: string;
   readonly color?: string;
   readonly hand: Card[];

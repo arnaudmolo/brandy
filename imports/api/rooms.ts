@@ -4,7 +4,8 @@ import flatten from 'ramda/es/flatten';
 import 'meteor/meteor';
 import { Meteor } from 'meteor/meteor';
 import Players from './players';
-import { splitAt, omit } from 'ramda';
+import { splitAt, omit, last } from 'ramda';
+import { start } from '../ui/components/Board/points';
 
 function generateUID () {
   // I generate the UID from two parts here
@@ -45,7 +46,7 @@ class RoomsCollection extends Mongo.Collection {
       identifiant: generateUID(),
       deck: shuffleArray([...generateDeck(), ...generateDeck()]),
       cemetery: [],
-      pawns: flatten(COLORS.map((color, i) => range(i * 4, (i * 4) + 4).map(index => ({position: 96 + index, color: color})))),
+      pawns: flatten(COLORS.map((color, i) => range(i * 4, (i * 4) + 4).map(index => ({position: 96 + index, color: color, moved: false})))),
       players: [],
       gifts: [],
     });
@@ -81,11 +82,45 @@ Meteor.methods({
     Rooms.update({_id: roomId}, {$addToSet: {players: playerId}});
   },
   'rooms.pawns'(roomId, from, to) {
-    Rooms.update({_id: roomId}, {
-      $set: {
-        [`pawns.${from}.position`]: to
-      },
-    });
+    const firsts = [0, 16, 32, 48, 64, 80];
+    let moved = false;
+    if (firsts.includes(from.position)) {
+      moved = true;
+    }
+    const room = Rooms.findOne({_id: roomId});
+    const placeTaken = room.pawns.find(pawn => pawn.position === to);
+    if (placeTaken) {
+      if (last(room.cemetery).value === 11) {
+        return Rooms.update({_id: roomId}, {
+          $set: {
+            [`pawns.${from}.position`]: to,
+            [`pawns.${room.pawns.indexOf(placeTaken)}.position`]: room.pawns[from].position
+          },
+        });
+      } else {
+        const ofColor = room.pawns.filter(pawn => pawn.color === placeTaken.color);
+        return Rooms.update({_id: roomId}, {
+          $set: {
+            [`pawns.${from}.position`]: to,
+            [`pawns.${room.pawns.indexOf(placeTaken)}.position`]: start[placeTaken.color].find(slot => ofColor.every(pawn => slot.position !== pawn.position)).position
+          }
+        })
+      }
+    }
+    if (moved) {
+      Rooms.update({_id: roomId}, {
+        $set: {
+          [`pawns.${from}.position`]: to,
+          [`pawns.${from}.moved`]: moved,
+        },
+      });
+    } else {
+      Rooms.update({_id: roomId}, {
+        $set: {
+          [`pawns.${from}.position`]: to,
+        },
+      });
+    }
   },
   'rooms.draw'(roomId, nb) {
     const room = Rooms.findOne(roomId);
@@ -102,7 +137,7 @@ Meteor.methods({
         $set: {hand}
       });
     });
-    Rooms.update(roomId, {
+    return Rooms.update(roomId, {
       $set: {
         gifts: room.players,
         cemetery,

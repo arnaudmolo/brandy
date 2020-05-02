@@ -11,10 +11,18 @@ import Card from '../Card';
 import './styles.css';
 
 const Drawer: React.SFC<{
-  onDraw?: (nbCards: number) => any
+  onDraw?: (nbCards: number) => any;
 }> = ({onDraw}) => {
   const [nbCards, setNbCards] = useState(6);
   const onClick = useCallback(() => {
+    if (onDraw) {
+      onDraw(nbCards);
+      if (nbCards - 1 <= 0) {
+        setNbCards(6);
+      } else {
+        setNbCards(nbCards - 1);
+      }
+    }
     onDraw && onDraw(nbCards);
   }, [onDraw, nbCards]);
 

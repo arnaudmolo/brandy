@@ -5,10 +5,30 @@
   margin: 0 auto;
 }
 
+.cemetry--card__container--black {
+  box-shadow: 0px 0px 25px 10px var(--black);
+}
+.cemetry--card__container--blue {
+  box-shadow: 0px 0px 25px 10px var(--blue);
+}
+.cemetry--card__container--green {
+  box-shadow: 0px 0px 25px 10px var(--green);
+}
+.cemetry--card__container--white {
+  box-shadow: 0px 0px 25px 10px var(--white);
+}
+.cemetry--card__container--yellow {
+  box-shadow: 0px 0px 25px 10px var(--yellow);
+}
+.cemetry--card__container--red {
+  box-shadow: 0px 0px 25px 10px var(--red);
+}
+
 .cemetry--card__container {
   position: absolute;
   top: 0;
   transition: translate 1s ease;
+  border-radius: 10px;
 }
 
 .cemetry--card__container:nth-child(1) {

@@ -18,6 +18,7 @@ const Point: React.SFC<{
   cy: number;
   xRatio: number;
   yRatio: number;
+  movable: boolean;
 }> = React.memo((props) => {
   const { id } = props;
   const [collectedProps, drag] = useDrag({
@@ -41,7 +42,7 @@ const Point: React.SFC<{
   return (
     <animated.g
       className={`point__container point__container__${props.position.color}  ${collectedProps ? 'point__container-invisible' : ''}`}
-      transform={animate.xy.interpolate((x, y) => `translate(${x}, ${y}) ${collectedProps ? 'scale(1.5)' : ''}`)}
+      transform={animate.xy.interpolate((x: number, y: number) => `translate(${x}, ${y}) ${collectedProps ? 'scale(1.5)' : ''}`)}
       ref={drag}
     >
       <circle
@@ -56,6 +57,7 @@ const Point: React.SFC<{
         cx={0}
         cy={0}
       />
+      <text>{props.position.position}</text>
     </animated.g>
   );
 });
@@ -63,17 +65,19 @@ const Point: React.SFC<{
 const Drop: React.SFC<{
   polygon: any;
   onDrop?: (pointDescription, target: number) => any;
+  onClick: (...args: any[]) => any;
+  enable: boolean;
   id: number;
-}> = React.memo(({id, polygon, onDrop}) => {
+}> = React.memo(({enable, polygon, onDrop, onClick}) => {
 
   const [, drop] = useDrop({
     accept: POINT,
-    drop: useCallback((pointDescription) =>
-      onDrop && onDrop(pointDescription, polygon.position)
-    , [onDrop, polygon.position])
+    drop: useCallback((pointDescription) => {
+      onDrop && pointDescription.payload.position !== polygon.position && onDrop(pointDescription, polygon.position);
+    }, [onDrop, polygon.position, enable])
   });
   return (
-    <g className="polygon-container" transform={`translate(${polygon.cx}, ${polygon.cy})`}>
+    <g onClick={onClick} className={`polygon-container ${enable ? 'polygon-container__enabled' : 'polygon-container__disabled' }`} transform={`translate(${polygon.cx}, ${polygon.cy})`}>
       <circle
         className={`slot slot__${polygon.color}`}
         cx={0}
@@ -87,6 +91,7 @@ const Drop: React.SFC<{
         cy={0}
         r="20"
       />
+      <text>{polygon.position}</text>
     </g>
   );
 });
@@ -105,9 +110,15 @@ type Pawn = {
 
 type Props = {
   players?: Player[];
-  pawns: {
-    position: number,
-    color: string
+  pawns: Pawn[];
+  playable: {
+    from: Pawn;
+    to: {
+      cx: number,
+      cy: number,
+      color?: string,
+      position: number
+    }[];
   }[];
   setPawns: (fromIndexOf: number, to: number) => any;
 };
@@ -116,14 +127,12 @@ const XVB = 980;
 const YVB = 980;
 
 const Board: React.SFC<Props> = React.memo(withResizeDetector<Props>((props) => {
-  const { pawns, setPawns } = props;
+  const { pawns, setPawns, playable } = props;
   let { width, height } = props;
   width = width || 100;
   height = height || 100;
   width = Math.min(width, 750);
   height = Math.min(height, 750);
-  // const width = 500;
-  // const height = 500;
   const w = width+ margins.left + margins.right;
   const h = height + margins.top + margins.bottom;
   const xRatio = XVB / width;
@@ -131,10 +140,17 @@ const Board: React.SFC<Props> = React.memo(withResizeDetector<Props>((props) => 
 
   const onDrop = useCallback((pointDescription, newPosition) => {
     setPawns(
-      findIndex((p: Pawn) => pointDescription.payload.position === p.position && pointDescription.payload.color === p.color, pawns),
+      findIndex(
+        (p: Pawn) => pointDescription.payload.position === p.position && pointDescription.payload.color === p.color,
+        pawns
+      ),
       newPosition,
     );
   }, [pawns, setPawns]);
+
+  const drops = playable.reduce((acc, move) => {
+    return move.to.reduce((acc, drop) => acc.add(drop), acc);
+  }, new Set());
 
   return (
     <svg
@@ -187,15 +203,26 @@ const Board: React.SFC<Props> = React.memo(withResizeDetector<Props>((props) => 
       <g>
         <g>
           {useMemo(() =>
-            data.map((polygon, index) =>
-              <Drop onDrop={onDrop} key={index} id={index} polygon={polygon} />
-            )
+            data.map((polygon, index) => {
+              return (
+                <Drop
+                  enable={drops.has(polygon)}
+                  // enable
+                  onClick={() => console.log(index, polygon, drops.has(polygon))}
+                  onDrop={onDrop}
+                  key={index}
+                  id={index}
+                  polygon={polygon}
+                />
+              )
+            })
           , [onDrop])}
         </g>
         <g className="points">
           {useMemo(() =>
             pawns.map((pawn, i) => {
               const position = data[pawn.position];
+              // const ok = playable.find(move => move.to)
               return (
                 <Point
                   key={`${pawn.color}-${i}`}
