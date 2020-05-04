@@ -46,13 +46,13 @@ class RoomsCollection extends Mongo.Collection {
       identifiant: generateUID(),
       deck: shuffleArray([...generateDeck(), ...generateDeck()]),
       cemetery: [],
-      pawns: flatten(COLORS.map((color, i) => start[color].map(slot => ({position: slot.position, color: color, moved: false})))),
+      pawns: flatten(COLORS.map(color => start[color].map(slot => ({position: slot.position, color: color, moved: false})))),
       players: [],
       gifts: [],
+      round: 0,
     });
   }
   join (roomId: string, playerId: string) {
-    console.log('ask to join', roomId, playerId);
     return Meteor.call('rooms.join', roomId, playerId);
   }
   movePawn (roomId: string, from: number, to: number) {
@@ -83,11 +83,14 @@ Meteor.methods({
   },
   'rooms.pawns'(roomId, from, to) {
     const firsts = [0, 16, 32, 48, 64, 80];
-    let moved = false;
-    if (firsts.includes(from.position)) {
-      moved = true;
-    }
     const room = Rooms.findOne({_id: roomId});
+    if (firsts.includes(room.pawns[from].position)) {
+      Rooms.update({_id: roomId}, {
+        $set: {
+          [`pawns.${from}.moved`]: true,
+        },
+      });
+    }
     const placeTaken = room.pawns.find(pawn => pawn.position === to);
     if (placeTaken) {
       if (last(room.cemetery).value === 11) {
@@ -107,20 +110,11 @@ Meteor.methods({
         })
       }
     }
-    if (moved) {
-      Rooms.update({_id: roomId}, {
-        $set: {
-          [`pawns.${from}.position`]: to,
-          [`pawns.${from}.moved`]: moved,
-        },
-      });
-    } else {
-      Rooms.update({_id: roomId}, {
-        $set: {
-          [`pawns.${from}.position`]: to,
-        },
-      });
-    }
+    Rooms.update({_id: roomId}, {
+      $set: {
+        [`pawns.${from}.position`]: to,
+      },
+    });
   },
   'rooms.draw'(roomId, nb) {
     const room = Rooms.findOne(roomId);
@@ -142,7 +136,8 @@ Meteor.methods({
         gifts: room.players,
         cemetery,
         deck,
-      }
+      },
+      $inc: {round: 1}
     });
   }
 });

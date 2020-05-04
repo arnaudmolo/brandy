@@ -12,30 +12,19 @@ import './styles.css';
 
 const Drawer: React.SFC<{
   onDraw?: (nbCards: number) => any;
-}> = ({onDraw}) => {
-  const [nbCards, setNbCards] = useState(6);
+  value: number;
+}> = ({onDraw, value}) => {
   const onClick = useCallback(() => {
     if (onDraw) {
-      onDraw(nbCards);
-      if (nbCards - 1 <= 0) {
-        setNbCards(6);
-      } else {
-        setNbCards(nbCards - 1);
-      }
+      onDraw(value);
     }
-    onDraw && onDraw(nbCards);
-  }, [onDraw, nbCards]);
-
-  const onChange = useCallback((event) => {
-    setNbCards(event.target.value);
-  }, []);
+  }, [onDraw, value]);
 
   return (
     <FormControl>
       <Input
         type="number"
-        value={ nbCards }
-        onChange={ onChange }
+        value={ value }
         inputProps={{
           'aria-label': 'weight',
           min: 1,
@@ -52,11 +41,12 @@ const Deck: React.SFC<{
   cards: CardType[];
   onDraw?: (nbCards: number) => any
   visible?: boolean;
-}> = ({cards, onDraw, visible}) => {
+  value: number;
+}> = ({cards, onDraw, visible, value}) => {
   return (
     <div>
       <p>il y à { cards.length } cartes</p>
-      <Drawer onDraw={onDraw} />
+      <Drawer onDraw={onDraw} value={value} />
       {visible && <ul className="deck--deck__container">
         {
           take(5, cards).map((card) =>

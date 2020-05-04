@@ -44,7 +44,7 @@ const Players = new PlayersCollection('players');
 export default Players;
 
 Meteor.methods({
-  'players.play'(playerId: string, card) {
+  'players.play'(playerId: string, card: Card) {
     Players.update({_id: playerId}, {
       $pull: {
         hand: card
@@ -68,7 +68,7 @@ Meteor.methods({
     });
     Rooms.update({players: playerId}, {$pull: {gifts: playerId}});
   },
-  'players.accept'(playerId) {
+  'players.accept'(playerId: string) {
     const player = Players.findOne(playerId);
     Players.update(player._id, {
       $unset: {
@@ -79,7 +79,7 @@ Meteor.methods({
       }
     });
   },
-  'players.discard'(playerId) {
+  'players.discard'(playerId: string) {
     const player = Players.findOne(playerId);
     const teamate = Players.findOne({_id: player.gift.from});
     Players.update(teamate, {

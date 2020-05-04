@@ -23,13 +23,13 @@ import Cemetery from '../Cemetery';
 import { useTracker } from 'meteor/react-meteor-data';
 import { Rooms } from '/imports/api/rooms';
 import Players from '/imports/api/players';
-import { last, slice, head, nth, curry, chain, zipObj, map, take, tail, mathMod, __, range } from 'ramda';
+import { last, init, slice, head, nth, curry, chain, zipObj, map, take, tail, mathMod, __, range } from 'ramda';
 import { start, paths, allPath, end } from '../Board/points';
 
-const circle = mathMod(__, 96)
+const circle = mathMod(__, 96);
 
 const objFromListWith = curry((fn, list) => chain(zipObj, map(fn))(list))
-const objFromPosition = objFromListWith(p => p.position)
+const objFromPosition = objFromListWith(p => p.position);
 
 const COLORS = [
   'black',
@@ -44,6 +44,7 @@ const SIMPLE_CARDS = [2, 3, 5, 6, 8, 9, 10, 12];
 
 type RoomType = {
   readonly _id: number;
+  readonly round: number;
   readonly identifiant: String;
   readonly players: Player[];
   readonly gamemaster: Player;
@@ -77,7 +78,17 @@ const Room: React.SFC<{}> = () => {
   const room: RoomType = useTracker(() => {
     const room = Rooms.findOne({identifiant: params.id});
     return room;
-  }, [params.id])
+  }, [params.id]);
+
+  const rotativeColors = useMemo(() => {
+    let c: string[] = [...COLORS];
+    if (room?.round) {
+      for (let index = 0; index < room.round; index++) {
+        c = [last(c), ...init(c)];
+      }
+    }
+    return c;
+  }, [room?.round]);
 
   const players: Player[] = useTracker(() => {
     if (room && room.players.length >= 1) {
@@ -86,7 +97,17 @@ const Room: React.SFC<{}> = () => {
           $in: room.players
         }
       });
-      return requete.fetch();
+      return requete.fetch().sort((a: Player, b: Player) => {
+        const colorOrder = rotativeColors.indexOf(b.color) - rotativeColors.indexOf(a.color);
+        if (b.hand && a.hand) {
+          if (b.hand.length === a.hand.length) {
+            return colorOrder;
+          }
+          return b.hand.length - a.hand.length;
+        } else {
+          return colorOrder;
+        }
+      });
     }
     return [];
   }, [room && room.players]);
@@ -100,7 +121,6 @@ const Room: React.SFC<{}> = () => {
   }, [room?._id, player?._id]);
 
   const updatePawns = useCallback((from: number, to: number) => {
-    console.log(from, to);
     Rooms.movePawn(room._id, from, to);
   }, [room]);
 
@@ -117,7 +137,11 @@ const Room: React.SFC<{}> = () => {
     if (players.some(player => !player.color)) {
       return console.log('nooooon');
     }
-    Rooms.draw(room._id, nb);
+    console.log(players.map(player => player.hand))
+    players.forEach(player => {
+      player.hand.forEach(card => Players.play(card));
+    });
+    setTimeout(() => Rooms.draw(room._id, nb), 100);
   }, [room, players]);
 
   const onPlayCard = useCallback((card: CardType) => {
@@ -135,12 +159,7 @@ const Room: React.SFC<{}> = () => {
   ) : [];
 
   const lastCardPlayed = room && last(room.cemetery);
-  const [seven, setSeven] = useState(7);
-  
-  useEffect(() => {
-    console.log('reset a set');
-    setSeven(7);
-  }, [lastCardPlayed?.value]);
+
   let playable: any[] = useMemo(() => {
     let response = [];
     if (player && player.color && room && room.cemetery && !hasToGift) {
@@ -166,7 +185,6 @@ const Room: React.SFC<{}> = () => {
                 // Tout les points entre le pion et la destination
                 // Si le point de départ est dans le les points que le pion va traverser
                 const startSlot = localPath.find(block => block.position === head(paths[player.color]).position);
-                console.log({startSlot});
                 if (startSlot) {
                   // Alors bifurque vers la niche
                   const normalPath = slice(pawn.position + 1, startSlot.position + 1, allPath);
@@ -252,12 +270,12 @@ const Room: React.SFC<{}> = () => {
     return response;
   }, [lastCardPlayed]);
 
-  console.log({ playable, room });
-
   const colorsById = players ? players.reduce((acc, player) => {
     acc[player._id] = player.color;
     return acc;
   }, {}) : {};
+
+  room && console.log(room.cemetery);
 
   return (
     <div className="room__container">
@@ -271,17 +289,12 @@ const Room: React.SFC<{}> = () => {
         {room && <Deck
           cards={ room.deck }
           onDraw={ drawCards }
+          value={ 6 - mathMod(room.round, 5) }
         />}
         {room && (
           <div className={'player-liste'}>
             <List dense>
-              {players && players.sort((a: Player, b: Player) => {
-                if (b.hand && a.hand) {
-                  return b.hand.length - a.hand.length
-                } else {
-                  return 0
-                }
-              }).map(listPlayer => (
+              {players && players.map(listPlayer => (
                 <ListItem key={listPlayer._id} className={`player-list__player player-list__player__${listPlayer.color}`}>
                   <ListItemText
                     secondary={`${listPlayer && listPlayer.hand.length} cards`}
