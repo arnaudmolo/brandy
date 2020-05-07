@@ -39,7 +39,7 @@ const Hand: React.SFC<{
     return <div>Pas de player</div>
   }
   return (
-    <div className={`hand-container ${player.color ? `hand-container--${player.color}` : ''}`}>
+    <div className={`hand-container`}>
       {player.hand.map(card => (
         <div
           key={`${card.value}-${card.family}-${card.id}`}

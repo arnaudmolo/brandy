@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTracker } from 'meteor/react-meteor-data';
 
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -20,11 +21,13 @@ import Popup from 'reactjs-popup';
 import './styles.css';
 import Cemetery from '../Cemetery';
 
-import { useTracker } from 'meteor/react-meteor-data';
 import { Rooms } from '/imports/api/rooms';
 import Players from '/imports/api/players';
 import { last, init, slice, head, nth, curry, chain, zipObj, map, take, tail, mathMod, __, range } from 'ramda';
 import { start, paths, allPath, end } from '../Board/points';
+import { Snackbar, Button } from '@material-ui/core';
+
+import MuiAlert from '@material-ui/lab/Alert';
 
 const circle = mathMod(__, 96);
 
@@ -59,7 +62,6 @@ type RoomType = {
   }[];
 }
 
-
 const TEAMS = [['black', 'white'], ['blue', 'yellow'], ['red', 'green']];
 
 const findTeamateByColor = (players: Player[], player: Player) => {
@@ -70,6 +72,10 @@ const findTeamateByColor = (players: Player[], player: Player) => {
   return players.find(p => p._id !== player._id && TEAMS.findIndex(t => t.includes(p.color)) === nbTeam);
 }
 
+function Alert(props) {
+  return <MuiAlert elevation={6} variant="filled" {...props} />;
+}
+
 const Room: React.SFC<{}> = () => {
   const {player, loading, changeName} = usePlayer();
   const params: {id?: string} = useParams();
@@ -77,6 +83,9 @@ const Room: React.SFC<{}> = () => {
 
   const room: RoomType = useTracker(() => {
     const room = Rooms.findOne({identifiant: params.id});
+    window.doIt = () => {
+      Rooms.reshuffle(room._id, room.players);
+    }
     return room;
   }, [params.id]);
 
@@ -111,8 +120,10 @@ const Room: React.SFC<{}> = () => {
     }
     return [];
   }, [room && room.players]);
+
+  const waitForGift: Player[] = useMemo(() => room && players && players.filter(player => room.gifts.includes(player._id)), [players, room]);
   
-  const hasToGift = room && room.gifts.includes(player._id);
+  const hasToGift = room && player && room.gifts.includes(player._id);
 
   useEffect(() => {
     if (room && player && !room.players.includes(player._id)) {
@@ -133,6 +144,8 @@ const Room: React.SFC<{}> = () => {
     }
   }, [changeName]);
 
+  const [notification, setNotification] = useState<string>(null);
+
   const drawCards = useCallback(async (nb) => {
     if (players.some(player => !player.color)) {
       return console.log('nooooon');
@@ -145,12 +158,24 @@ const Room: React.SFC<{}> = () => {
   }, [room, players]);
 
   const onPlayCard = useCallback((card: CardType) => {
-    Players.play(card);
-  }, []);
+    if (waitForGift && waitForGift.length) {
+      return setNotification(`waiting for: ${waitForGift.reduce((otherNames, player) => `${otherNames} ${player.name}, `, '')} to send their gifts`);
+    }
+    const firstPlayer = players && players.length && head(players);
+    if (firstPlayer._id === player._id) {
+      return Players.play(card);
+    } else {
+      return setNotification(`It's ${firstPlayer.name} turn.`);
+    }
+  }, [waitForGift]);
 
   const onColorClick = useCallback((color) =>
     Players.update(playerId, {$set: {color}})
   , [playerId]);
+
+  const throwCards = useCallback(() => {
+    player?.hand.forEach(card => Players.play(card));
+  }, [player?._id, player?.hand]);
 
   const teamate = useMemo(() => player && findTeamateByColor(players, player), [players, player]);
 
@@ -163,28 +188,35 @@ const Room: React.SFC<{}> = () => {
   let playable: any[] = useMemo(() => {
     let response = [];
     if (player && player.color && room && room.cemetery && !hasToGift) {
-      if (lastCardPlayed && lastCardPlayed.by === player._id) {
-        const myPawns = room.pawns.filter(pawn => pawn.color === player.color);
-        const myStart = start[player.color];
+      const finished: boolean = room.pawns.filter(pawn => pawn.color === player.color).every(pawn => end[player.color].some(slot => slot.position === pawn.position ));
+      const pwcms: Player = finished ? teamate : player;
+      if (lastCardPlayed && (lastCardPlayed?.by === player._id)) {
+        const myPawns = room.pawns.filter(pawn => pawn.color === pwcms.color);
+        const myStart = start[pwcms.color];
+        const myEnd = end[pwcms.color];
+        const myPaths = paths[pwcms.color];
         const myPawnsOnBoard = myPawns.filter(pawn => !myStart.map(({position}) => position).includes(pawn.position));
-        const panwsByPosition = objFromPosition(room.pawns);
+        const pawnsByPosition = objFromPosition(room.pawns);
         const pawnsOnBoard = room.pawns.filter(pawn => allPath.map(({position}) => position).includes(pawn.position));
         // const pawnsOnBoardByPosition = objFromPosition(room.pawns)
         const canaille = (positions: number[]) => {
           return (pawns, pawn) => {
             const to = positions.reduce((acc, position) => {
-              const localPath = slice(pawn.position, circle(pawn.position + position), allPath);
+              let localPath = pawn.position + position < 0 ? slice(allPath.length - position, allPath.length + 1, allPath) : slice(pawn.position, circle(pawn.position + position), allPath);
               const rawPath = tail(localPath);
               const rawPathByLocation = objFromPosition(rawPath);
               // Bloque si un pion n'est pas bougé
-              if (FIRSTS.some(index => rawPathByLocation[index] && panwsByPosition[index] && panwsByPosition[index] !== pawn && !panwsByPosition[index].moved)) {
+              if (FIRSTS.some(index => {
+                const res = rawPathByLocation[index] && pawnsByPosition[index] && pawnsByPosition[index] !== pawn && !pawnsByPosition[index].moved;
+                return res;
+              })) {
                 return acc;
               }
               // Rentrer dans la niche
               if (pawn.moved) {
                 // Tout les points entre le pion et la destination
                 // Si le point de départ est dans le les points que le pion va traverser
-                const startSlot = localPath.find(block => block.position === head(paths[player.color]).position);
+                const startSlot = localPath.find(block => block.position === head(myPaths).position);
                 if (startSlot) {
                   // Alors bifurque vers la niche
                   const normalPath = slice(pawn.position + 1, startSlot.position + 1, allPath);
@@ -192,7 +224,7 @@ const Room: React.SFC<{}> = () => {
                     position - 1,
                     [
                       ...normalPath,
-                      ...take(position - normalPath.length, end[player.color])
+                      ...take(position - normalPath.length, myEnd),
                     ]
                   );
                   if (destination) {
@@ -201,8 +233,17 @@ const Room: React.SFC<{}> = () => {
                 }
               }
               // Is in the niche
-              if (end[player.color].find(slot => slot.position === pawn.position)) {
-                return [...acc, end[player.color].find(slot => slot.position === pawn.position + position)]
+              if (myEnd.find(slot => slot.position === pawn.position)) {
+                const fromStart = pawn.position - myEnd[0].position + 1;
+                localPath = slice(fromStart, pawn.position - fromStart + position, myEnd);
+                if (localPath.find(slot => pawnsByPosition[slot.position])) {
+                  return acc
+                }
+                return [...acc, myEnd.find(slot => slot.position === pawn.position + position)];
+              }
+              // Is in the start
+              if (pawn.position > 96) {
+                return acc;
               }
               return [...acc, nth(circle(pawn.position + position), allPath)];
             }, []);
@@ -213,9 +254,9 @@ const Room: React.SFC<{}> = () => {
           };
         }
         if (lastCardPlayed.value === 1) {
+          response = myPawns.reduce((acc, pawn) => {
           // Can I draw a pawn ?
-          if (myPawns.every(pawn => pawn.position !== paths[player.color][0].position)) {
-            response = myPawns.reduce((acc, pawn) => {
+          if (pawn.position !== myPaths[0].position) {
               const isAtStart = myStart.some(slot => slot.position === pawn.position);
               if (isAtStart) {
                 acc.push({
@@ -223,15 +264,15 @@ const Room: React.SFC<{}> = () => {
                   to: [head(paths[player.color])]
                 });
               }
-              return canaille([1])(acc, pawn);
-            }, []);
-          }
+            }
+            return canaille([1, 11])(acc, pawn);
+          }, []);
         } else if (SIMPLE_CARDS.includes(lastCardPlayed.value)) {
           response = myPawnsOnBoard.reduce(canaille([lastCardPlayed.value]), []);
         } else if (lastCardPlayed.value === 4) {
           response = myPawnsOnBoard.reduce(canaille([-4, 4]), []);
         } else if (lastCardPlayed.value === 13) {
-          if (myPawns.every(pawn => pawn.position !== paths[player.color][0].position)) {
+          if (myPawns.every(pawn => pawn.position !== myPaths[0].position)) {
             response = myPawns.reduce((acc, pawn) => {
               const isAtStart = myStart.some(slot => slot.position === pawn.position);
               if (isAtStart) {
@@ -239,7 +280,7 @@ const Room: React.SFC<{}> = () => {
                   ...acc,
                   {
                     from: pawn,
-                    to: [head(paths[player.color])]
+                    to: [head(myPaths)]
                   }
                 ];
               }
@@ -268,17 +309,22 @@ const Room: React.SFC<{}> = () => {
       }
     };
     return response;
-  }, [lastCardPlayed]);
+  }, [lastCardPlayed?.id, teamate]);
+
+  console.log({ playable, room, player, players });
 
   const colorsById = players ? players.reduce((acc, player) => {
     acc[player._id] = player.color;
     return acc;
   }, {}) : {};
 
-  room && console.log(room.cemetery);
-
   return (
     <div className="room__container">
+      <Snackbar open={!!notification} autoHideDuration={6000} onClose={() => setNotification(null)}>
+        <Alert onClose={() => setNotification(null)} severity="warning">
+          {notification}
+        </Alert>
+      </Snackbar>
       <div className="room__main">
         {room && (
           <Board pawns={room.pawns} playable={ playable } setPawns={updatePawns} />
@@ -291,13 +337,18 @@ const Room: React.SFC<{}> = () => {
           onDraw={ drawCards }
           value={ 6 - mathMod(room.round, 5) }
         />}
+        <div
+          style={{backgroundColor: `var(--${last(rotativeColors)})`}}
+        >
+          <p>started</p>
+        </div>
         {room && (
           <div className={'player-liste'}>
             <List dense>
               {players && players.map(listPlayer => (
                 <ListItem key={listPlayer._id} className={`player-list__player player-list__player__${listPlayer.color}`}>
                   <ListItemText
-                    secondary={`${listPlayer && listPlayer.hand.length} cards`}
+                    secondary={`${listPlayer && listPlayer.hand.length} cards${room.gifts.includes(listPlayer._id) ? ' - Has to send a gift' : ''}`}
                   >
                     <div>
                       {player && listPlayer._id === player._id ? (
@@ -336,16 +387,17 @@ const Room: React.SFC<{}> = () => {
           </div>
         )}
       </aside>
-      <footer className="room__footer room__hand-container">
+      <footer className={`room__footer room__hand-container ${player && player.color ? `room__hand-container--${player.color}` : ''}`}>
         {room && player && player.hand && (
           <Hand
             player={ player }
             teamate={ teamate }
-            hasToGift={hasToGift}
-            players={players.filter(p => p._id !== player._id)}
-            onDrawCard={onPlayCard}
+            hasToGift={ hasToGift }
+            players={ players.filter(p => p._id !== player._id) }
+            onDrawCard={ onPlayCard }
           />
         )}
+        <Button onClick={ throwCards } variant="contained" color="secondary">Throw</Button>
       </footer>
     </div>
   );

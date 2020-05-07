@@ -1,9 +1,11 @@
 import React, { useCallback } from 'react';
+import Popup from 'reactjs-popup';
 import CardType from '../../models/Card';
 import './styles.css';
 import back from './dos.png';
 import all from './preview.png';
-import Popup from 'reactjs-popup';
+
+console.log(all, back);
 
 type Props = {
   card: CardType;

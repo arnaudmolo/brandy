@@ -52,6 +52,9 @@ class RoomsCollection extends Mongo.Collection {
       round: 0,
     });
   }
+  reshuffle (roomId: string, players: string[]) {
+    return Meteor.call('rooms.resetDeck', roomId, players);
+  }
   join (roomId: string, playerId: string) {
     return Meteor.call('rooms.join', roomId, playerId);
   }
@@ -116,11 +119,29 @@ Meteor.methods({
       },
     });
   },
+  'rooms.resetDeck' (roomId, players) {
+    Rooms.update({_id: roomId}, {
+      $set: {
+        deck: shuffleArray([...generateDeck(), ...generateDeck()]),
+        cemetery: [],
+      }
+    });
+    Players.update({
+      _id: {
+        $in: players
+      }
+    }, {
+      $set: {hand: []},
+    }, {
+      multi: true,
+    });
+  },
   'rooms.draw'(roomId, nb) {
     const room = Rooms.findOne(roomId);
     let deck = room.deck;
     let cemetery = room.cemetery;
     room.players.map((playerId: string) => {
+      console.log('ici', deck.length < +nb);
       if (deck.length < +nb) {
         deck = shuffleArray([...deck, ...cemetery.map(omit(['by']))]);
         cemetery = [];

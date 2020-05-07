@@ -30,25 +30,6 @@
   margin: 0;
 }
 
-.hand-container--black {
-  background-color: var(--black);
-}
-.hand-container--blue {
-  background-color: var(--blue);
-}
-.hand-container--green {
-  background-color: var(--green);
-}
-.hand-container--white {
-  background-color: var(--white);
-}
-.hand-container--yellow {
-  background-color: var(--yellow);
-}
-.hand-container--red {
-  background-color: var(--red);
-}
-
 .choice-container__button__play {
   background-color: var(--color2);
 }

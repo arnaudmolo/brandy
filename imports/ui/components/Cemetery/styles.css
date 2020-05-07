@@ -27,7 +27,7 @@
 .cemetry--card__container {
   position: absolute;
   top: 0;
-  transition: translate 1s ease;
+  transition: transform 1s ease;
   border-radius: 10px;
 }
 
@@ -53,5 +53,30 @@
 
 .cemetry--card__container:nth-child(5) {
   transform: translate(10px, 10px) rotate(10deg);
+  z-index: 2;
+}
+
+.cemetery-container--visible .cemetry--card__container:nth-child(1) {
+  transform: translate(0, 0) rotate(0deg);
+  z-index: 6;
+}
+
+.cemetery-container--visible .cemetry--card__container:nth-child(2) {
+  transform: translate(97px, -3px) rotate(-3deg);
+  z-index: 5;
+}
+
+.cemetery-container--visible .cemetry--card__container:nth-child(3) {
+  transform: translate(198px, 0) rotate(1deg);
+  z-index: 4;
+}
+
+.cemetery-container--visible .cemetry--card__container:nth-child(4) {
+  transform: translate(298px, 1px) rotate(3deg);
+  z-index: 3;
+}
+
+.cemetery-container--visible .cemetry--card__container:nth-child(5) {
+  transform: translate(400px, 10px) rotate(10deg);
   z-index: 2;
 }

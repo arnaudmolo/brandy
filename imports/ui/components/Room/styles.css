@@ -30,6 +30,11 @@
 .room__main { order: 2; }
 .room__footer { order: 4; }
 
+.room__footer {
+  display: flex;
+  justify-content: space-between;
+}
+
 .color-picker__color {
   width: 33px;
   height: 33px;
@@ -118,6 +123,24 @@
 }
 
 
+.room__hand-container--black {
+  background-color: var(--black);
+}
+.room__hand-container--blue {
+  background-color: var(--blue);
+}
+.room__hand-container--green {
+  background-color: var(--green);
+}
+.room__hand-container--white {
+  background-color: var(--white);
+}
+.room__hand-container--yellow {
+  background-color: var(--yellow);
+}
+.room__hand-container--red {
+  background-color: var(--red);
+}
 
 @media only screen and (max-width: 800px) {
   .room__footer {
