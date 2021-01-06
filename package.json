@@ -14,7 +14,7 @@
     "@material-ui/lab": "^4.0.0-alpha.52",
     "@types/ramda": "^0.27.3",
     "@types/react-router-dom": "^5.1.4",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "css-reset-and-normalize": "^2.1.0",
     "meteor-node-stubs": "^1.0.0",
     "ramda": "^0.27.0",
